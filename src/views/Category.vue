@@ -1,0 +1,226 @@
+<template>
+  <div class="category-box">
+    <header class="category-header wrap">
+      <i class="spicon spicon-arrow-left-bold" @click="goHome"></i>
+      <div class="header-search">
+        <i class="spicon spicon-31sousuo"></i>
+        <router-link class="search-title" to="./product-list?from=category"
+          >全场50元起步</router-link
+        >
+      </div>
+      <i class="spicon spicon-gengduo"></i>
+    </header>
+    <div class="search-wrap" ref="searchWrap">
+      <list-scroll :scroll-data="state.categoryData" class="nav-side-wrapper">
+        <ul class="nav-side">
+          <li
+            v-for="item in state.categoryData"
+            :key="item.categoryId"
+            v-text="item.categoryName"
+            :class="{ active: state.currentIndex == item.categoryId }"
+            @click="selectMenu(item.categoryId)"
+          ></li>
+        </ul>
+      </list-scroll>
+      <div class="search-content">
+        <list-scroll :scroll-data="state.categoryData">
+          <div class="swiper-container">
+            <div class="swiper-wrapper">
+              <template v-for="(category, index) in state.categoryData">
+                <div
+                  class="swiper-slide"
+                  v-if="state.currentIndex == category.categoryId"
+                  :key="index"
+                >
+                  <!-- <img class="category-main-img" :src="category.mainImgUrl" v-if="category.mainImgUrl"/> -->
+                  <div
+                    class="category-list"
+                    v-for="(products, index) in category.secondLevelCategoryVOS"
+                    :key="index"
+                  >
+                    <p class="catogory-title">{{ products.categoryName }}</p>
+                    <div
+                      class="product-item"
+                      v-for="(product, index) in products.thirdLevelCategoryVOS"
+                      :key="index"
+                      @click="selectProduct(product)"
+                    >
+                      <i class="spicon spicon-shangpin1"></i>
+                      <p
+                        v-text="product.categoryName"
+                        class="product-title"
+                      ></p>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </list-scroll>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { reactive, onMounted, ref } from "vue";
+import { getCategory } from "@/service/goods";
+import { useRouter } from "vue-router";
+const router = useRouter();
+// composition API 获取 refs 的形式
+const searchWrap = ref(null);
+const state = reactive({
+  categoryData: [],
+  currentIndex: 15,
+});
+onMounted(async () => {
+  // 这个操作是为了将 searchWrap 这个节点撑满屏幕，否则底部会留白
+  let $screenHeight = document.documentElement.clientHeight;
+  searchWrap.value.style.height = $screenHeight - 100 + "px";
+  const { data } = await getCategory();
+  state.categoryData = data;
+});
+const selectMenu = (index) => {
+  state.currentIndex = index;
+};
+const selectProduct = (item) => {
+  router.push({ path: "product-list", query: { categoryId: item.categoryId } });
+};
+const goHome = () => {
+  router.push({ path: "home" });
+};
+</script>
+
+<style lang="less" scoped>
+@import "../common/style/mixin";
+.category-box {
+  .category-header {
+    background: #fff;
+    position: fixed;
+    left: 0;
+    top: 0;
+    .fj();
+    .wh(100%, 50px);
+    line-height: 50px;
+    padding: 0 15px;
+    box-sizing: border-box;
+    font-size: 15px;
+    color: #656771;
+    z-index: 10000;
+    &.active {
+      background: @primary;
+    }
+    i {
+      text-align: center;
+      font-family: "iconfont" !important;
+      font-size: 20px;
+      font-style: normal;
+      -webkit-font-smoothing: antialiased;
+    }
+    .icon-left {
+      font-size: 25px;
+      font-weight: bold;
+    }
+    .header-search {
+      display: flex;
+      width: 80%;
+      height: 30px;
+      line-height: 20px;
+      margin: 10px 0;
+      padding: 5px 0;
+      color: #232326;
+      background: #f7f7f7;
+      border-radius: 20px;
+      .spicon-31sousuo {
+        padding: 0 10px 0 20px;
+        font-size: 17px;
+      }
+      .search-title {
+        padding-left: 5px;
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+
+  .search-wrap {
+    overflow: hidden;
+    .fj();
+    width: 100%;
+    margin-top: 50px;
+    background: #f8f8f8;
+    .nav-side-wrapper {
+      width: 28%;
+      height: 100%;
+      overflow: hidden;
+      .nav-side {
+        width: 100%;
+        .boxSizing();
+        background: #f8f8f8;
+        li {
+          width: 100%;
+          height: 56px;
+          text-align: center;
+          line-height: 56px;
+          font-size: 14px;
+          &.active {
+            color: @primary;
+            background: #fff;
+          }
+        }
+      }
+    }
+    .search-content {
+      width: 72%;
+      height: 100%;
+      padding: 0 10px;
+      background: #fff;
+      overflow-y: scroll;
+      touch-action: pan-y;
+
+      * {
+        touch-action: pan-y;
+      }
+      .boxSizing();
+      .swiper-container {
+        width: 100%;
+        .swiper-slide {
+          width: 100%;
+          .category-main-img {
+            width: 100%;
+          }
+          .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            width: 100%;
+            .catogory-title {
+              width: 100%;
+              font-size: 17px;
+              font-weight: 500;
+              padding: 20px 0;
+            }
+            .product-item {
+              width: 33.3333%;
+              margin-bottom: 10px;
+              text-align: center;
+              font-size: 15px;
+              .product-img {
+                .wh(30px, 30px);
+              }
+            }
+          }
+        }
+      }
+      i {
+        text-align: center;
+        font-family: "iconfont" !important;
+        font-size: 22px;
+        font-style: normal;
+        -webkit-font-smoothing: antialiased;
+        color: #518a4e;
+      }
+    }
+  }
+}
+</style>
